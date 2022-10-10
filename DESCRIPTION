@@ -1,0 +1,35 @@
+Package: lab2godata
+Type: Package
+Title: Record linkage between raw lab data and Go.Data records
+Version: 1.0.0
+Authors@R:
+    c(person(given = "Amy", 
+             family = "Mikhail", 
+             role = c("aut", "cre"),
+             email = "amy.mikhail@gmail.com"))
+Maintainer: The WHO Go.Data Team <godata@who.int>
+Description: A set of functions match lab data to existing case or lab records in Go.Data.  The matching case or lab record IDs are appended to the lab data, thus facilitating bulk import into Go.Data.
+Remotes:
+    github::EmilBode/EmilMisc
+    github::WorldHealthOrganization/godataR@amymikhail_labimportfunctions
+Imports: 
+    rio, 
+    data.table,
+    dplyr, 
+    lubridate,
+    purrr, 
+    EmilMisc,
+    godataR,
+    shiny,
+    shinyjs,
+    shinyvalidate
+Suggests:
+    devtools, 
+    testthat
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 4.2.0)
