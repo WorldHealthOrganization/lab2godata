@@ -1,5 +1,4 @@
 lab2godata: essential tools for matching lab results
-<img src='inst/images/godataR_logo.png' align='centre' height='18%' width='18%'/>
 ================
 10 October 2022
 
