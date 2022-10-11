@@ -10,7 +10,7 @@ Authors@R:
 Maintainer: The WHO Go.Data Team <godata@who.int>
 Description: A set of functions match lab data to existing case or lab records in Go.Data.  The matching case or lab record IDs are appended to the lab data, thus facilitating bulk import into Go.Data.
 Remotes:
-    github::EmilBode/EmilMisc
+    github::EmilBode/EmilMisc,
     github::WorldHealthOrganization/godataR
 Imports: 
     rio, 
