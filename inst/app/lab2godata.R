@@ -8,6 +8,8 @@ library(dplyr)
 library(shiny)
 library(shinyjs)
 library(shinyvalidate)
+library(shinycssloaders)
+
 
 
 # List of matchcols choices with first name and surname:
@@ -22,194 +24,219 @@ is.Date <- function(x) {
 ##########################################################
 # Create shiny page for inputting function arguments:
 
-ui <- fluidPage(
+ui <- function(request){
 
-  # Use Shiny JS:
-  shinyjs::useShinyjs(),
+  fluidPage(
 
-  ###########################################################################
-  # ADD GO.DATA ICON TO APP:
+    # Use Shiny JS:
+    shinyjs::useShinyjs(),
 
-  # Add title panel and Go.Data logo:
-  titlePanel(div(img(src = "godataR_logo.png",
-                     height = '15%',
-                     width = '15%'),
-                 "Lab2GoData")),
+    ###########################################################################
+    # ADD GO.DATA ICON TO APP:
 
-  ###########################################################################
-  # USER INPUTS:
+    # Add title panel and Go.Data logo:
+    titlePanel(div(img(src = "godataR_logo.png",
+                       height = '15%',
+                       width = '15%'),
+                   "Lab2GoData")),
 
-  h3(),
-  hr(),
+    ###########################################################################
+    # USER INPUTS:
 
-  sidebarLayout(
+    h3(),
+    hr(),
 
-    sidebarPanel(
+    sidebarLayout(
 
-      # Ask user to select the type of Go.Data installation:
-      radioButtons(inputId = "godata_setup",
-                   label = "Type of Go.Data installation:",
-                   choices = list("Server" = "server",
-                                  "Local computer" = "local"),
-                   selected = character(0),
-                   inline = FALSE,
-                   width = NULL),
+      sidebarPanel(
 
-      # Ask user for Go.Data URL:
-      shinyjs::hidden(
-        textInput(inputId = "godata_url",
-                  label = "Go.Data URL:",
-                  value = "",
-                  width = "100%",
-                  placeholder = "Enter web address of your Go.Data server")),
+        # Ask user to select the type of Go.Data installation:
+        radioButtons(inputId = "godata_setup",
+                     label = "Type of Go.Data installation:",
+                     choices = list("Server" = "server",
+                                    "Local computer" = "local"),
+                     selected = character(0),
+                     inline = FALSE,
+                     width = NULL),
 
-      # Ask user for their Go.Data user name (email):
-      textInput(inputId = "godata_username",
-                label = "Go.Data user name:",
-                value = "",
-                width = '100%',
-                placeholder = "Your Go.Data login email address"),
-
-      # Ask user for their Go.Data password:
-      passwordInput(inputId = "godata_password",
-                    label = "Go.Data password:",
+        # Ask user for Go.Data URL:
+        shinyjs::hidden(
+          textInput(inputId = "godata_url",
+                    label = "Go.Data URL:",
                     value = "",
-                    width = NULL,
-                    placeholder = "Your Go.Data password"),
+                    width = "100%",
+                    placeholder = "Enter web address of your Go.Data server")),
 
-      # Ask user to select the type of Go.Data installation:
-      radioButtons(inputId = "labdata_type",
-                   label = "What do you want to do?",
-                   choices = list("Create new lab records in Go.Data" = "link new",
-                                  "Edit Go.Data lab records with revised values" = "edit lab",
-                                  "Update Go.Data lab records with new sequencing results" = "add sequencing"),
-                   selected = character(0),
-                   inline = FALSE,
-                   width = '100%'),
+        # Ask user for their Go.Data user name (email):
+        textInput(inputId = "godata_username",
+                  label = "Go.Data user name:",
+                  value = "",
+                  width = '100%',
+                  placeholder = "Your Go.Data login email address"),
 
-      # Ask user to select the type of date query they want to use:
-      radioButtons(inputId = "date_format",
-                   label = "What order are your sample dates in?",
-                   choices = list("Year, then month, then day" = "ymd",
-                                  "Day, then month, then year" = "dmy",
-                                  "Month, then day, then year" = "mdy"),
-                   selected = "ymd",
-                   inline = FALSE,
-                   width = '100%'),
+        # Ask user for their Go.Data password:
+        passwordInput(inputId = "godata_password",
+                      label = "Go.Data password:",
+                      value = "",
+                      width = NULL,
+                      placeholder = "Your Go.Data password"),
 
-      # Ask user to select the epiwindow in days:
-      sliderInput(inputId = "epiwindow",
-                  label = "Select epiwindow for matching records:",
-                  min = 10,
-                  max = 90,
-                  value = 30,
-                  step = 5,
-                  width = "100%"),
+        # Ask user to select the type of Go.Data installation:
+        radioButtons(inputId = "labdata_type",
+                     label = "What do you want to do?",
+                     choices = list("Create new lab records in Go.Data" = "link new",
+                                    "Edit Go.Data lab records with revised values" = "edit lab",
+                                    "Update Go.Data lab records with new sequencing results" = "add sequencing"),
+                     selected = character(0),
+                     inline = FALSE,
+                     width = '100%'),
 
-      # Ask user to select which method they want to use for matching:
-      radioButtons(inputId = "matchmethod",
-                   label = "How would you like to match lab records?",
-                   choices = list("Use exact matches" = "exact",
-                                  "Use fuzzy matching" = "fuzzy"),
-                   selected = character(0),
-                   inline = FALSE,
-                   width = '100%'),
+        # Ask user to select the type of date query they want to use:
+        radioButtons(inputId = "date_format",
+                     label = "What order are your sample dates in?",
+                     choices = list("Year, then month, then day" = "ymd",
+                                    "Day, then month, then year" = "dmy",
+                                    "Month, then day, then year" = "mdy"),
+                     selected = "ymd",
+                     inline = FALSE,
+                     width = '100%'),
 
-      # Ask user to select which lab results columns they want to use for matching:
-      radioButtons(inputId = "matchcols",
-                   label = "Which columns would you like to match on?",
-                   choices = list("First name, surname and date of birth" = "names & dob",
-                                  "First name, surname and age in years" = "names & age",
-                                  "First name and surname" = "names",
-                                  "Personal Identity Number" = "doc ID"),
-                   selected = character(0),
-                   inline = FALSE,
-                   width = '100%'),
+        # Ask user to select the epiwindow in days:
+        sliderInput(inputId = "epiwindow",
+                    label = "Select epiwindow for matching records:",
+                    min = 10,
+                    max = 90,
+                    value = 30,
+                    step = 5,
+                    width = "100%"),
 
-      # Ask user to upload their lab data file to the Shiny app:
-      fileInput(inputId = "labdata_filepath",
-                label = "Browse and upload lab results file:",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values",
-                           "text/plain",
-                           ".csv",
-                           ".txt",
-                           ".xls",
-                           ".xlsx")),
+        # Ask user to select which method they want to use for matching:
+        radioButtons(inputId = "matchmethod",
+                     label = "How would you like to match lab records?",
+                     choices = list("Use exact matches" = "exact",
+                                    "Use fuzzy matching" = "fuzzy"),
+                     selected = character(0),
+                     inline = FALSE,
+                     width = '100%'),
 
-      # Ask user to select the column in labdata that contains sample dates:
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_sdatecol",
-                    label = "Select column containing sample dates",
-                    choices = "")),
+        # Ask user to select which lab results columns they want to use for matching:
+        radioButtons(inputId = "matchcols",
+                     label = "Which columns would you like to match on?",
+                     choices = list("First name, surname and date of birth" = "names & dob",
+                                    "First name, surname and age in years" = "names & age",
+                                    "First name and surname" = "names",
+                                    "Personal Identity Number" = "doc ID"),
+                     selected = character(0),
+                     inline = FALSE,
+                     width = '100%'),
 
+        # Ask user to upload their lab data file to the Shiny app:
+        fileInput(inputId = "labdata_filepath",
+                  label = "Browse and upload lab results file:",
+                  multiple = FALSE,
+                  accept = c("text/csv",
+                             "text/comma-separated-values",
+                             "text/plain",
+                             ".csv",
+                             ".txt",
+                             ".xls",
+                             ".xlsx")),
 
-      # Ask user for Go.Data URL conditional on them choosing "server":
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_firstnamecol",
-                    label = "Select column containing first names:",
-                    choices = "")),
-
-      # Ask user for Go.Data URL conditional on them choosing "server":
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_lastnamecol",
-                    label = "Select column containing last names:",
-                    choices = "")),
-
-      # Ask user for Go.Data URL conditional on them choosing "server":
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_dobcol",
-                    label = "Select column containing dates of birth:",
-                    choices = "")),
-
-      # Ask user for Go.Data URL conditional on them choosing "server":
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_agecol",
-                    label = "Select column containing age in years:",
-                    choices = "")),
-
-      # Ask user for Go.Data URL conditional on them choosing "server":
-      shinyjs::hidden(
-        selectInput(inputId = "labdata_docidcol",
-                    label = "Select column containing personal identity numbers:",
-                    choices = "")),
-
-      # Create submit button:
-      actionButton(inputId = "submit",
-                   label = HTML("<b>Submit parameters</b>"),
-                   width = '75%',
-                   style = 'display:left-align',
-                   class = "btn-success"),
-
-      ###################################################################
-      # LAB2GODATA OUTPUTS:
-
-      # Download button for match report:
-      shinyjs::hidden(downloadButton(outputId = "dl_matchreport",
-                      label = "Download match report",
-                      width = '100%')),
-
-      # Download button for matched data:
-      shinyjs::hidden(downloadButton(outputId = "dl_matchdata",
-                      label = "Download matched data",
-                      width = '100%'))
+        # Ask user to select the column in labdata that contains sample dates:
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_sdatecol",
+                      label = "Select column containing sample dates",
+                      choices = "")),
 
 
-    ),
+        # Ask user for Go.Data URL conditional on them choosing "server":
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_firstnamecol",
+                      label = "Select column containing first names:",
+                      choices = "")),
 
-    mainPanel(
+        # Ask user for Go.Data URL conditional on them choosing "server":
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_lastnamecol",
+                      label = "Select column containing last names:",
+                      choices = "")),
 
-      tabsetPanel(
+        # Ask user for Go.Data URL conditional on them choosing "server":
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_dobcol",
+                      label = "Select column containing dates of birth:",
+                      choices = "")),
 
-        # Add viewer for summary table of successful matches:
-        tabPanel(title = "Match summary",
-                 dataTableOutput(outputId = "matchsummary")),
+        # Ask user for Go.Data URL conditional on them choosing "server":
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_agecol",
+                      label = "Select column containing age in years:",
+                      choices = "")),
+
+        # Ask user for Go.Data URL conditional on them choosing "server":
+        shinyjs::hidden(
+          selectInput(inputId = "labdata_docidcol",
+                      label = "Select column containing personal identity numbers:",
+                      choices = "")),
+
+        fluidRow(
+          align = "left",
+          br(),
+          column(12,
+                 splitLayout(cellWidths = c("50%", "50%"),
+
+                             # Create submit button:
+                             actionButton(inputId = "submit",
+                                          label = HTML("<b>Submit parameters</b>"),
+                                          width = '100%',
+                                          style = 'display:left-align',
+                                          class = "btn-success"),
+
+                             # Save input parameters:
+                             bookmarkButton(label = HTML("<b>Save parameters</b>"),
+                                            width = '100%',
+                                            style = 'display:left-align',
+                                            class = 'btn-info',
+                                            title = "Save input parameters",
+                                            id = "saveparams")
+                             ))),
+
+        ###################################################################
+        # LAB2GODATA OUTPUTS:
+
+        # Download button for match report:
+        shinyjs::hidden(downloadButton(outputId = "dl_matchreport",
+                                       label = "Download match report",
+                                       width = '50%',
+                                       style = 'display:left-align',
+                                       class = 'btn-primary')),
+
+        # Download button for matched data:
+        shinyjs::hidden(downloadButton(outputId = "dl_matchdata",
+                                       label = "Download matched data",
+                                       width = '50%',
+                                       style = 'display:left-align',
+                                       class = 'btn-primary'))
 
 
-        # Add viewer for more detailed match report linelist:
-        tabPanel(title = "Match report linelist",
-                 dataTableOutput(outputId = "shortreport"))
+      ),
+
+      mainPanel(
+
+        tabsetPanel(
+
+          # Add viewer for summary table of successful matches:
+          tabPanel(title = "Match summary",
+                   shinycssloaders::withSpinner(
+                     dataTableOutput(outputId = "matchsummary"))),
+
+
+          # Add viewer for more detailed match report linelist:
+          tabPanel(title = "Match report linelist",
+                   shinycssloaders::withSpinner(
+                     dataTableOutput(outputId = "shortreport")))
+
+        )
 
       )
 
@@ -217,7 +244,8 @@ ui <- fluidPage(
 
   )
 
-)
+
+}
 
 ##########################################################
 # Run the lab2godata_wrapper function with shiny inputs:
@@ -385,94 +413,35 @@ server <- function(input, output, session) {
   # Run lab2godata function as soon as submit button is pressed:
 
   # Create full match report for export:
-  mr <- eventReactive(input$submit, {
-    lab2godata_wrapper(
-      url = url(),
-      username = username(),
-      password = password(),
-      reason = reason(),
-      daterangeformat = daterangeformat(),
-      epiwindow = epiwindow(),
-      method = method(),
-      matchcols = matchcols(),
-      labdata = labdata(),
-      basedatecol = basedatecol(),
-      firstnamecol = firstnamecol(),
-      lastnamecol = lastnamecol(),
-      dobcol = dobcol(),
-      agecol = agecol(),
-      docidcol = docidcol())$match_report
-  })
+  matches <- eventReactive(input$submit, {
 
-  # Create short match report to display in shiny app:
-  sr <- eventReactive(input$submit, {
-     lab2godata_wrapper(
-      url = url(),
-      username = username(),
-      password = password(),
-      reason = reason(),
-      daterangeformat = daterangeformat(),
-      epiwindow = epiwindow(),
-      method = method(),
-      matchcols = matchcols(),
-      labdata = labdata(),
-      basedatecol = basedatecol(),
-      firstnamecol = firstnamecol(),
-      lastnamecol = lastnamecol(),
-      dobcol = dobcol(),
-      agecol = agecol(),
-      docidcol = docidcol())$short_report %>%
+      # Run lab2godata_wrapper to generate matches:
+      lab2godata_wrapper(
+        url = url(),
+        username = username(),
+        password = password(),
+        reason = reason(),
+        daterangeformat = daterangeformat(),
+        epiwindow = epiwindow(),
+        method = method(),
+        matchcols = matchcols(),
+        labdata = labdata(),
+        basedatecol = basedatecol(),
+        firstnamecol = firstnamecol(),
+        lastnamecol = lastnamecol(),
+        dobcol = dobcol(),
+        agecol = agecol(),
+        docidcol = docidcol())
 
-      # Format dates in rendered table (not automatic):
-      dplyr::mutate(across(.cols = where(is.Date),
-                           ~format(.,"%Y-%m-%d")))
-  })
-
-  stab <- eventReactive(input$submit, {
-    lab2godata_wrapper(
-      url = url(),
-      username = username(),
-      password = password(),
-      reason = reason(),
-      daterangeformat = daterangeformat(),
-      epiwindow = epiwindow(),
-      method = method(),
-      matchcols = matchcols(),
-      labdata = labdata(),
-      basedatecol = basedatecol(),
-      firstnamecol = firstnamecol(),
-      lastnamecol = lastnamecol(),
-      dobcol = dobcol(),
-      agecol = agecol(),
-      docidcol = docidcol())$match_summary
-  })
+    })
 
 
-  # Create matched lab data ready for import to Go.Data:
-  md <- eventReactive(input$submit, {
-    lab2godata_wrapper(
-      url = url(),
-      username = username(),
-      password = password(),
-      reason = reason(),
-      daterangeformat = daterangeformat(),
-      epiwindow = epiwindow(),
-      method = method(),
-      matchcols = matchcols(),
-      labdata = labdata(),
-      basedatecol = basedatecol(),
-      firstnamecol = firstnamecol(),
-      lastnamecol = lastnamecol(),
-      dobcol = dobcol(),
-      agecol = agecol(),
-      docidcol = docidcol())$matched_data
-  })
+    # Write summary table to Shiny dashboard:
+    output$matchsummary <- renderDataTable({matches()$match_summary})
 
-  # Write summary table to Shiny dashboard:
-  output$matchsummary <- renderDataTable({stab()})
+    # Write table to Shiny dashboard:
+    output$shortreport <- renderDataTable({matches()$short_report})
 
-  # Write table to Shiny dashboard:
-  output$shortreport <- renderDataTable({sr()})
 
 
 
@@ -484,7 +453,7 @@ server <- function(input, output, session) {
 
     observe({
 
-      if(!is.null(mr())){
+      if(!is.null(matches()$match_report)){
 
         shinyjs::show(id = "dl_matchreport")
 
@@ -505,7 +474,7 @@ server <- function(input, output, session) {
     content = function(file){
 
       # Export the data with rio::export():
-      rio::export(x = mr(), file = file)
+      rio::export(x = matches()$match_report, file = file)
 
       }
   )
@@ -515,7 +484,7 @@ server <- function(input, output, session) {
 
     observe({
 
-      if(!is.null(md())){
+      if(!is.null(matches()$matched_data)){
 
         shinyjs::show(id = "dl_matchdata")
 
@@ -536,11 +505,29 @@ server <- function(input, output, session) {
       content = function(file){
 
         # Export the data with rio::export():
-        rio::export(x = md(), file = file)
+        rio::export(x = matches()$matched_data, file = file)
 
         }
 
       )
+
+    ##########################################################################
+    # Save input parameters for use in subsequent sessions:
+
+    # Items to exclude from saving:
+    setBookmarkExclude(c("godata_username",
+                         "godata_password",
+                         "labdata_filepath",
+                         "submit",
+                         "saveparams",
+                         "dl_matchreport",
+                         "dl_matchdata"))
+
+    # Trigger bookmarking of session parameters:
+    observeEvent(input$saveparams, {
+      session$doBookmark()
+    })
+
 
     ##########################################################################
     # STOP THE APP WHEN THE SESSION ENDS:
@@ -554,4 +541,8 @@ server <- function(input, output, session) {
 
 }
 
+# Allow shiny parameters to be saved:
+enableBookmarking(store = "server")
+
+# Run app:
 shinyApp(ui, server)
