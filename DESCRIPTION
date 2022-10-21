@@ -22,8 +22,7 @@ Imports:
     godataR,
     shiny,
     shinyjs,
-    shinyvalidate, 
-    shinycssloaders
+    shinyvalidate
 Suggests:
     devtools, 
     testthat

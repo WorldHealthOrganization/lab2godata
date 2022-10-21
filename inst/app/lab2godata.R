@@ -8,8 +8,13 @@ library(dplyr)
 library(shiny)
 library(shinyjs)
 library(shinyvalidate)
-library(shinycssloaders)
 
+# Load lab2godata settings if file is available:
+if(file.exists("lab2godata_settings.rda")){
+
+  load("lab2godata_settings.rda")
+
+}
 
 
 # List of matchcols choices with first name and surname:
@@ -55,7 +60,9 @@ ui <- function(request){
                      label = "Type of Go.Data installation:",
                      choices = list("Server" = "server",
                                     "Local computer" = "local"),
-                     selected = character(0),
+                     selected = ifelse(exists("godata_setup"),
+                                       godata_setup,
+                                       character(0)),
                      inline = FALSE,
                      width = NULL),
 
@@ -63,7 +70,9 @@ ui <- function(request){
         shinyjs::hidden(
           textInput(inputId = "godata_url",
                     label = "Go.Data URL:",
-                    value = "",
+                    value = ifelse(exists("godata_url"),
+                                   godata_url,
+                                   ""),
                     width = "100%",
                     placeholder = "Enter web address of your Go.Data server")),
 
@@ -87,7 +96,9 @@ ui <- function(request){
                      choices = list("Create new lab records in Go.Data" = "link new",
                                     "Edit Go.Data lab records with revised values" = "edit lab",
                                     "Update Go.Data lab records with new sequencing results" = "add sequencing"),
-                     selected = character(0),
+                     selected = ifelse(exists("labdata_type"),
+                                       labdata_type,
+                                       character(0)),
                      inline = FALSE,
                      width = '100%'),
 
@@ -97,7 +108,9 @@ ui <- function(request){
                      choices = list("Year, then month, then day" = "ymd",
                                     "Day, then month, then year" = "dmy",
                                     "Month, then day, then year" = "mdy"),
-                     selected = "ymd",
+                     selected = ifelse(exists("date_format"),
+                                       date_format,
+                                       "ymd"),
                      inline = FALSE,
                      width = '100%'),
 
@@ -106,7 +119,9 @@ ui <- function(request){
                     label = "Select epiwindow for matching records:",
                     min = 10,
                     max = 90,
-                    value = 30,
+                    value = ifelse(exists("epiwindow"),
+                                   epiwindow,
+                                   30),
                     step = 5,
                     width = "100%"),
 
@@ -115,7 +130,9 @@ ui <- function(request){
                      label = "How would you like to match lab records?",
                      choices = list("Use exact matches" = "exact",
                                     "Use fuzzy matching" = "fuzzy"),
-                     selected = character(0),
+                     selected = ifelse(exists("matchmethod"),
+                                       matchmethod,
+                                       character(0)),
                      inline = FALSE,
                      width = '100%'),
 
@@ -126,7 +143,9 @@ ui <- function(request){
                                     "First name, surname and age in years" = "names & age",
                                     "First name and surname" = "names",
                                     "Personal Identity Number" = "doc ID"),
-                     selected = character(0),
+                     selected = ifelse(exists("matchcols"),
+                                       matchcols,
+                                       character(0)),
                      inline = FALSE,
                      width = '100%'),
 
@@ -192,13 +211,13 @@ ui <- function(request){
                                           style = 'display:left-align',
                                           class = "btn-success"),
 
-                             # Save input parameters:
-                             bookmarkButton(label = HTML("<b>Save parameters</b>"),
-                                            width = '100%',
-                                            style = 'display:left-align',
-                                            class = 'btn-info',
-                                            title = "Save input parameters",
-                                            id = "saveparams")
+                             # Save input parameters to use in later sessions:
+                             actionButton(inputId = "saveparams",
+                                          label = HTML("<b>Save parameters</b>"),
+                                          width = '100%',
+                                          style = 'display:left-align',
+                                          class = "btn-info"),
+
                              ))),
 
         ###################################################################
@@ -213,7 +232,7 @@ ui <- function(request){
 
         # Download button for matched data:
         shinyjs::hidden(downloadButton(outputId = "dl_matchdata",
-                                       label = "Download matched data",
+                                       label = "Download match data",
                                        width = '50%',
                                        style = 'display:left-align',
                                        class = 'btn-primary'))
@@ -227,14 +246,12 @@ ui <- function(request){
 
           # Add viewer for summary table of successful matches:
           tabPanel(title = "Match summary",
-                   shinycssloaders::withSpinner(
-                     dataTableOutput(outputId = "matchsummary"))),
+                   dataTableOutput(outputId = "matchsummary")),
 
 
           # Add viewer for more detailed match report linelist:
           tabPanel(title = "Match report linelist",
-                   shinycssloaders::withSpinner(
-                     dataTableOutput(outputId = "shortreport")))
+                   dataTableOutput(outputId = "shortreport"))
 
         )
 
@@ -299,37 +316,67 @@ server <- function(input, output, session) {
       updateSelectInput(session,
                         inputId = "labdata_sdatecol",
                         label = "Select column containing specimen dates:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_sdatecol")){
+                          ifelse(labdata_sdatecol %in% ldnames,
+                                 labdata_sdatecol,
+                                 "")
+                        } else {""} )
 
       # Provide list of lab data column names to choose first name col from:
       updateSelectInput(session,
                         inputId = "labdata_firstnamecol",
                         label = "Select column containing first names:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_firstnamecol")){
+                          ifelse(labdata_firstnamecol %in% ldnames,
+                                 labdata_firstnamecol,
+                                 "")
+                        } else {""} )
 
       # Provide list of lab data column names to choose last name col from:
       updateSelectInput(session,
                         inputId = "labdata_lastnamecol",
                         label = "Select column containing last names:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_lastnamecol")){
+                          ifelse(labdata_lastnamecol %in% ldnames,
+                                 labdata_lastnamecol,
+                                 "")
+                        } else {""} )
 
       # Provide list of lab data column names to choose dob col from:
       updateSelectInput(session,
                         inputId = "labdata_dobcol",
                         label = "Select column containing dates of birth:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_dobcol")){
+                          ifelse(labdata_dobcol %in% ldnames,
+                                 labdata_dobcol,
+                                 "")
+                        } else {""} )
 
       # Provide list of lab data column names to choose age col from:
       updateSelectInput(session,
                         inputId = "labdata_agecol",
                         label = "Select column containing age in years:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_agecol")){
+                          ifelse(labdata_agecol %in% ldnames,
+                                 labdata_agecol,
+                                 "")
+                        } else {""} )
 
       # Provide list of lab data column names to choose document ID col from:
       updateSelectInput(session,
                         inputId = "labdata_docidcol",
                         label = "Select column containing document ID numbers:",
-                        choices  = ldnames)
+                        choices  = ldnames,
+                        selected = if(exists("labdata_docidcol")){
+                          ifelse(labdata_docidcol %in% ldnames,
+                                 labdata_docidcol,
+                                 "")
+                        } else {""} )
 
     }
 
@@ -360,6 +407,44 @@ server <- function(input, output, session) {
     shinyjs::toggle(id = "labdata_docidcol",
                     condition = input$matchcols == "doc ID")
 
+  })
+
+
+  #########################################################################
+  # SAVE USER SETTINGS FOR FUTURE USE:
+
+  observeEvent(input$saveparams, {
+
+    # Name the parameters to save:
+    godata_setup <- input$godata_setup
+    godata_url <- input$godata_url
+    labdata_type <- input$labdata_type
+    date_format <- input$date_format
+    epiwindow <- input$epiwindow
+    matchmethod <- input$matchmethod
+    matchcols <- input$matchcols
+    labdata_sdatecol <- input$labdata_sdatecol
+    labdata_firstnamecol <- input$labdata_firstnamecol
+    labdata_lastnamecol <- input$labdata_lastnamecol
+    labdata_dobcol <- input$labdata_dobcol
+    labdata_agecol <- input$labdata_agecol
+    labdata_docidcol <- input$labdata_docidcol
+
+    # Save the parameters in a list object:
+    save(file = "lab2godata_settings.rda",
+         list = c("godata_setup",
+                  "godata_url",
+                  "labdata_type",
+                  "date_format",
+                  "epiwindow",
+                  "matchmethod",
+                  "matchcols",
+                  "labdata_sdatecol",
+                  "labdata_firstnamecol",
+                  "labdata_lastnamecol",
+                  "labdata_dobcol",
+                  "labdata_agecol",
+                  "labdata_docidcol"))
   })
 
 
@@ -511,22 +596,6 @@ server <- function(input, output, session) {
 
       )
 
-    ##########################################################################
-    # Save input parameters for use in subsequent sessions:
-
-    # Items to exclude from saving:
-    setBookmarkExclude(c("godata_username",
-                         "godata_password",
-                         "labdata_filepath",
-                         "submit",
-                         "saveparams",
-                         "dl_matchreport",
-                         "dl_matchdata"))
-
-    # Trigger bookmarking of session parameters:
-    observeEvent(input$saveparams, {
-      session$doBookmark()
-    })
 
 
     ##########################################################################
@@ -541,8 +610,6 @@ server <- function(input, output, session) {
 
 }
 
-# Allow shiny parameters to be saved:
-enableBookmarking(store = "server")
 
 # Run app:
 shinyApp(ui, server)
